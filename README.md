@@ -9,6 +9,7 @@ import sys
 from retico import *
 
 prefix = '/path/to/module/'
+sys.path.append(prefix+'retico-vision')
 sys.path.append(prefix+'retico-yolov8')
 
 # from retico_yolov8 import YoloV8
