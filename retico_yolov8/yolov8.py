@@ -14,7 +14,16 @@ from ultralytics import YOLO
 
 
 import retico_core
-from .vision import ImageIU, DetectedObjectsIU
+
+# TODO make is so that you don't need these 3 lines below
+# idealy retico-vision would be in the env so you could 
+# import it by just using:
+# from retico_vision.vision import ImageIU, DetectedObjectsIU
+import sys
+prefix = '../../'
+sys.path.append(prefix+'retico-vision')
+
+from retico_vision.vision import ImageIU, DetectedObjectsIU
 
 class Yolov8(retico_core.AbstractModule):
     @staticmethod
@@ -85,7 +94,6 @@ class Yolov8(retico_core.AbstractModule):
             valid_boxes = results[0].boxes.xyxy.numpy()
             valid_score = results[0].boxes.conf.numpy()
             valid_cls = results[0].boxes.cls.numpy()
-            print(valid_boxes)
 
             if len(valid_boxes) == 0: return # if nothing detected return 
             
