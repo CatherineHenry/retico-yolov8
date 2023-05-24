@@ -13,7 +13,7 @@ sys.path.append(prefix+'retico-vision')
 sys.path.append(prefix+'retico-yolov8')
 
 # from retico_yolov8 import YoloV8
-from retico_yolov8.vision import WebcamModule 
+from retico_vision.vision import WebcamModule 
 from retico_yolov8.yolov8 import Yolov8
 
 
