@@ -77,7 +77,7 @@ class Yolov8(retico_core.AbstractModule):
     
     def _detector_thread(self):
         while self._detector_thread_active:
-            time.sleep(2)
+            time.sleep(2) # remove this
             if len(self.queue) == 0:
                 time.sleep(0.5)
                 continue
@@ -94,8 +94,9 @@ class Yolov8(retico_core.AbstractModule):
             valid_boxes = results[0].boxes.xyxy.numpy()
             valid_score = results[0].boxes.conf.numpy()
             valid_cls = results[0].boxes.cls.numpy()
+            print(valid_boxes)
 
-            if len(valid_boxes) == 0: return # if nothing detected return 
+            if len(valid_boxes) == 0: continue # if nothing detected return 
             
             output_iu = self.create_iu(input_iu)
             output_iu.set_detected_objects(image, valid_boxes)
@@ -109,4 +110,3 @@ class Yolov8(retico_core.AbstractModule):
     
     def shutdown(self):
         self._detector_thread_active = False
-        return super().shutdown()
