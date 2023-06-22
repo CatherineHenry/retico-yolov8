@@ -91,9 +91,9 @@ class Yolov8(retico_core.AbstractModule):
             # print((toc - tic)*1000, 'ms')
 
             # for single image, batch size is 1
-            valid_boxes = results[0].boxes.xyxy.numpy()
-            valid_score = results[0].boxes.conf.numpy()
-            valid_cls = results[0].boxes.cls.numpy()
+            valid_boxes = results[0].boxes.xyxy.cpu().numpy()
+            valid_score = results[0].boxes.conf.cpu().numpy()
+            valid_cls = results[0].boxes.cls.cpu().numpy()
             print(valid_boxes)
 
             if len(valid_boxes) == 0: continue # if nothing detected return 
