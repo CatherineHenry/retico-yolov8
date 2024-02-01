@@ -6,7 +6,7 @@ This module provides on-device object detection capabilities by using the yolov8
 """
 
 from collections import deque
-import cv2
+# import cv2
 import numpy as np
 import threading
 import time
@@ -77,7 +77,7 @@ class Yolov8(retico_core.AbstractModule):
     
     def _detector_thread(self):
         while self._detector_thread_active:
-            time.sleep(2) # remove this
+            # time.sleep(2) # remove this
             if len(self.queue) == 0:
                 time.sleep(0.5)
                 continue
