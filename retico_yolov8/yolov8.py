@@ -20,8 +20,8 @@ import retico_core
 # import it by just using:
 # from retico_vision.vision import ImageIU, DetectedObjectsIU
 import sys
-prefix = '../../'
-sys.path.append(prefix+'retico-vision')
+# prefix = '../../'
+# sys.path.append(prefix+'retico-vision')
 
 from retico_vision.vision import ImageIU, DetectedObjectsIU
 
@@ -96,10 +96,15 @@ class Yolov8(retico_core.AbstractModule):
             # valid_cls = results[0].boxes.cls.cpu().numpy()
             print(valid_boxes)
 
-            if len(valid_boxes) == 0: continue # if nothing detected return 
-            
+
             output_iu = self.create_iu(input_iu)
-            output_iu.set_detected_objects(image, valid_boxes, "bb")
+            output_iu.set_flow_uuid(input_iu.flow_uuid)
+            output_iu.set_execution_uuid(input_iu.execution_uuid)
+            output_iu.set_motor_action(input_iu.motor_action)
+            if len(valid_boxes) == 0:
+                output_iu.set_detected_objects(image, [], "bb")
+            else:
+                output_iu.set_detected_objects(image, valid_boxes, "bb")
             um = retico_core.UpdateMessage.from_iu(output_iu, retico_core.UpdateType.ADD)
             self.append(um)
 
