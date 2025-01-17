@@ -68,6 +68,7 @@ class Yolov8(retico_core.AbstractModule):
         
         self.model = YOLO(f'yolov8{model}.pt')
         self.queue = deque(maxlen=1)
+        self.base_filepath = './yolo_output'
 
     def process_update(self, update_message):
         for iu, ut in update_message:
@@ -95,11 +96,29 @@ class Yolov8(retico_core.AbstractModule):
             valid_boxes = results[0].boxes.xyxy.cpu().numpy()
             # valid_score = results[0].boxes.conf.cpu().numpy()
             # valid_cls = results[0].boxes.cls.cpu().numpy()
-            print(valid_boxes)
 
             # clips the bounding boxes to the image shape
             clipped_boxes = clip_boxes(valid_boxes, results[0].orig_shape)
 
+            # Save the input image with the bounding box (if present)
+            path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/undetected/")
+            # Annotate a copy of the image, otherwise it will annotate the original image.
+            # The bounding box border will show in the sub image if the annotated image is used for clipping
+            annotated_image = np.asarray(image)
+            if len(valid_boxes) > 0:
+                annotator = Annotator(annotated_image)
+                for box in valid_boxes:
+                    print(box)
+                    annotator.box_label(box, 'n/a')
+                path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/detected/")
+                annotated_image = annotator.result()
+            path.mkdir(parents=True, exist_ok=True)
+            file_name = f"{input_iu.flow_uuid}.png" # TODO: png or jpg better?
+            imwrite_path = f"{str(path)}/{file_name}"
+            try:
+                Image.fromarray(annotated_image).save(imwrite_path)
+            except FileNotFoundError:
+                print(f"Did not write YOLO output to {imwrite_path}. Check directory exists.")
 
 
             output_iu = self.create_iu(input_iu)
