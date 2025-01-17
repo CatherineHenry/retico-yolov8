@@ -5,15 +5,19 @@ yolov8 Module
 This module provides on-device object detection capabilities by using the yolov8.
 """
 
-from collections import deque
-# import cv2
-import numpy as np
 import threading
 import time
-from ultralytics import YOLO
+from collections import deque
+from pathlib import Path
 
-
+import numpy as np
 import retico_core
+from PIL import Image
+from retico_vision.vision import ImageIU, DetectedObjectsIU
+from ultralytics import YOLO
+from ultralytics.utils.ops import clip_boxes
+from ultralytics.utils.plotting import Annotator
+
 
 # TODO make is so that you don't need these 3 lines below
 # idealy retico-vision would be in the env so you could 
