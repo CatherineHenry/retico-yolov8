@@ -23,11 +23,8 @@ from ultralytics.utils.plotting import Annotator
 # idealy retico-vision would be in the env so you could 
 # import it by just using:
 # from retico_vision.vision import ImageIU, DetectedObjectsIU
-import sys
 # prefix = '../../'
 # sys.path.append(prefix+'retico-vision')
-
-from retico_vision.vision import ImageIU, DetectedObjectsIU
 
 class Yolov8(retico_core.AbstractModule):
     @staticmethod
