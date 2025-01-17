@@ -20,7 +20,7 @@ from ultralytics.utils.plotting import Annotator
 
 
 # TODO make is so that you don't need these 3 lines below
-# idealy retico-vision would be in the env so you could 
+# ideally retico-vision would be in the env so you could
 # import it by just using:
 # from retico_vision.vision import ImageIU, DetectedObjectsIU
 # prefix = '../../'
