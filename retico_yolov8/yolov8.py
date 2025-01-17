@@ -97,15 +97,19 @@ class Yolov8(retico_core.AbstractModule):
             # valid_cls = results[0].boxes.cls.cpu().numpy()
             print(valid_boxes)
 
+            # clips the bounding boxes to the image shape
+            clipped_boxes = clip_boxes(valid_boxes, results[0].orig_shape)
+
+
 
             output_iu = self.create_iu(input_iu)
             output_iu.set_flow_uuid(input_iu.flow_uuid)
             output_iu.set_execution_uuid(input_iu.execution_uuid)
             output_iu.set_motor_action(input_iu.motor_action)
-            if len(valid_boxes) == 0:
+            if len(clipped_boxes) == 0:
                 output_iu.set_detected_objects(image, [], "bb")
             else:
-                output_iu.set_detected_objects(image, valid_boxes, "bb")
+                output_iu.set_detected_objects(image, clipped_boxes, "bb")
             um = retico_core.UpdateMessage.from_iu(output_iu, retico_core.UpdateType.ADD)
             self.append(um)
 
