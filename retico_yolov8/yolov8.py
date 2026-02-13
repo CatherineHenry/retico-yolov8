@@ -122,9 +122,6 @@ class Yolov8(retico_core.AbstractModule):
 
 
             output_iu = self.create_iu(input_iu)
-            output_iu.set_flow_uuid(input_iu.flow_uuid)
-            output_iu.set_execution_uuid(input_iu.execution_uuid)
-            output_iu.set_motor_action(input_iu.motor_action)
             if len(clipped_boxes) == 0:
                 output_iu.set_detected_objects(image, [], "bb")
             else:
