@@ -83,8 +83,9 @@ class Yolov8(retico_core.AbstractModule):
             if len(self.queue) == 0:
                 time.sleep(0.5)
                 continue
-
             input_iu = self.queue.popleft()
+            execution_uuid = input_iu.meta_data.get('execution_uuid')
+            flow_uuid = input_iu.meta_data.get('flow_uuid')
             image = input_iu.payload # assume PIL image
 
             # tic = time.time()
@@ -101,7 +102,7 @@ class Yolov8(retico_core.AbstractModule):
             clipped_boxes = clip_boxes(valid_boxes, results[0].orig_shape)
 
             # Save the input image with the bounding box (if present)
-            path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/undetected/")
+            path = Path(f"{self.base_filepath}/{execution_uuid}/undetected/")
             # Annotate a copy of the image, otherwise it will annotate the original image.
             # The bounding box border will show in the sub image if the annotated image is used for clipping
             annotated_image = np.asarray(image)
@@ -110,10 +111,10 @@ class Yolov8(retico_core.AbstractModule):
                 for box in valid_boxes:
                     print(box)
                     annotator.box_label(box, 'n/a')
-                path = Path(f"{self.base_filepath}/{input_iu.execution_uuid}/detected/")
+                path = Path(f"{self.base_filepath}/{execution_uuid}/detected/")
                 annotated_image = annotator.result()
             path.mkdir(parents=True, exist_ok=True)
-            file_name = f"{input_iu.flow_uuid}.png" # TODO: png or jpg better?
+            file_name = f"{flow_uuid}.png" # TODO: png or jpg better?
             imwrite_path = f"{str(path)}/{file_name}"
             try:
                 Image.fromarray(annotated_image).save(imwrite_path)
