@@ -109,7 +109,7 @@ class Yolov8(retico_core.AbstractModule):
             if len(valid_boxes) > 0:
                 annotator = Annotator(annotated_image)
                 for box in valid_boxes:
-                    print(box)
+                    # print(box)
                     annotator.box_label(box, 'n/a')
                 path = Path(f"{self.base_filepath}/{execution_uuid}/detected/")
                 annotated_image = annotator.result()
