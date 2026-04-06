@@ -11,6 +11,8 @@ from collections import deque
 from pathlib import Path
 
 import numpy as np
+from opentelemetry import trace
+
 import retico_core
 from PIL import Image
 from retico_vision.vision import ImageIU, DetectedObjectsIU
@@ -18,6 +20,7 @@ from ultralytics import YOLO
 from ultralytics.utils.ops import clip_boxes
 from ultralytics.utils.plotting import Annotator
 
+tracer = trace.get_tracer("my.tracer.name")
 
 # TODO make is so that you don't need these 3 lines below
 # ideally retico-vision would be in the env so you could
@@ -83,52 +86,54 @@ class Yolov8(retico_core.AbstractModule):
             if len(self.queue) == 0:
                 time.sleep(0.5)
                 continue
-            input_iu = self.queue.popleft()
-            execution_uuid = input_iu.meta_data.get('execution_uuid')
-            flow_uuid = input_iu.meta_data.get('flow_uuid')
-            image = input_iu.payload # assume PIL image
 
-            # tic = time.time()
-            results = self.model.predict(image, save=False, verbose=False)
-            # toc = time.time()
-            # print((toc - tic)*1000, 'ms')
+            with tracer.start_as_current_span("yolo_detector_thread") as span:
+                input_iu = self.queue.popleft()
+                execution_uuid = input_iu.meta_data.get('execution_uuid')
+                flow_uuid = input_iu.meta_data.get('flow_uuid')
+                image = input_iu.payload # assume PIL image
 
-            # for single image, batch size is 1
-            valid_boxes = results[0].boxes.xyxy.cpu().numpy()
-            # valid_score = results[0].boxes.conf.cpu().numpy()
-            # valid_cls = results[0].boxes.cls.cpu().numpy()
+                # tic = time.time()
+                results = self.model.predict(image, save=False, verbose=False)
+                # toc = time.time()
+                # print((toc - tic)*1000, 'ms')
 
-            # clips the bounding boxes to the image shape
-            clipped_boxes = clip_boxes(valid_boxes, results[0].orig_shape)
+                # for single image, batch size is 1
+                valid_boxes = results[0].boxes.xyxy.cpu().numpy()
+                # valid_score = results[0].boxes.conf.cpu().numpy()
+                # valid_cls = results[0].boxes.cls.cpu().numpy()
 
-            # Save the input image with the bounding box (if present)
-            path = Path(f"{self.base_filepath}/{execution_uuid}/undetected/")
-            # Annotate a copy of the image, otherwise it will annotate the original image.
-            # The bounding box border will show in the sub image if the annotated image is used for clipping
-            annotated_image = np.asarray(image)
-            if len(valid_boxes) > 0:
-                annotator = Annotator(annotated_image)
-                for box in valid_boxes:
-                    # print(box)
-                    annotator.box_label(box, 'n/a')
-                path = Path(f"{self.base_filepath}/{execution_uuid}/detected/")
-                annotated_image = annotator.result()
-            path.mkdir(parents=True, exist_ok=True)
-            file_name = f"{flow_uuid}.png" # TODO: png or jpg better?
-            imwrite_path = f"{str(path)}/{file_name}"
-            try:
-                Image.fromarray(annotated_image).save(imwrite_path)
-            except FileNotFoundError:
-                print(f"Did not write YOLO output to {imwrite_path}. Check directory exists.")
+                # clips the bounding boxes to the image shape
+                clipped_boxes = clip_boxes(valid_boxes, results[0].orig_shape)
+
+                # Save the input image with the bounding box (if present)
+                path = Path(f"{self.base_filepath}/{execution_uuid}/undetected/")
+                # Annotate a copy of the image, otherwise it will annotate the original image.
+                # The bounding box border will show in the sub image if the annotated image is used for clipping
+                annotated_image = np.asarray(image)
+                if len(valid_boxes) > 0:
+                    annotator = Annotator(annotated_image)
+                    for box in valid_boxes:
+                        # print(box)
+                        annotator.box_label(box, 'n/a')
+                    path = Path(f"{self.base_filepath}/{execution_uuid}/detected/")
+                    annotated_image = annotator.result()
+                path.mkdir(parents=True, exist_ok=True)
+                file_name = f"{flow_uuid}.png" # TODO: png or jpg better?
+                imwrite_path = f"{str(path)}/{file_name}"
+                try:
+                    Image.fromarray(annotated_image).save(imwrite_path)
+                except FileNotFoundError:
+                    print(f"Did not write YOLO output to {imwrite_path}. Check directory exists.")
 
 
-            output_iu = self.create_iu(input_iu)
-            if len(clipped_boxes) == 0:
-                output_iu.set_detected_objects(image, [], "bb")
-            else:
-                output_iu.set_detected_objects(image, clipped_boxes, "bb")
-            um = retico_core.UpdateMessage.from_iu(output_iu, retico_core.UpdateType.ADD)
-            self.append(um)
+                output_iu = self.create_iu(input_iu)
+                if len(clipped_boxes) == 0:
+                    output_iu.set_detected_objects(image, [], "bb")
+                else:
+                    output_iu.set_detected_objects(image, clipped_boxes, "bb")
+                um = retico_core.UpdateMessage.from_iu(output_iu, retico_core.UpdateType.ADD)
+                self.append(um)
 
 
     def prepare_run(self):
